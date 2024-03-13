@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<title>infobox show[one/Multiple]</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>html,body{height:100%;}body{padding:0;margin:0;}h1{padding:0;margin:0;font-size:50%;}</style>
+</head>
+<body>
+
+
+<!-- MAP[START] -->
+<h1>Click on the pin. (Select 1 to 3 as the second argument of the function. The result changes.)</h1>
+<div id="myMap" style="width:100vw;height:100vh;"></div>
+<!-- MAP[END] -->
+
+
+<script src='https://www.bing.com/api/maps/mapcontrol?callback=GetMap&key=AnyNxLkldi8EXahD24Eocb7qnVk8EmqW8QMLpYojrc39cX2yZdPH_RONx2gsfF2c' async defer></script>
+<script src="../js/BmapQuery.js"></script>
+<script>
+    //init
+    function GetMap() {
+        //------------------------------------------------------------------------
+        //1. Instance
+        //------------------------------------------------------------------------
+        const map = new Bmap("#myMap");
+        //------------------------------------------------------------------------
+        //2. Display Map
+        //------------------------------------------------------------------------
+        map.startMap(34.066018390258385, 134.5592288385663, "load", 10);
+
+        //----------------------------------------------------
+        //3. Infobox
+        //   options = new Array();
+        //   options[index] = { lat, lon, width, height, title, pinColor, description, show };
+        //----------------------------------------------------
+        const options = [];
+        options[0]={
+            "lat":33.974022514617616, 
+            "lon":134.36017639623424,
+            "title":"徳島",
+            "pinColor":"#ff0000",
+            "height":300,
+            "width":320,
+            "description": '神山まるごと高専<br><img src="img/kamiyama_kousha.jpg" width="300">',
+            "show":false
+        };
+        options[1]={
+            "lat":33.90304846358411, 
+            "lon":134.4183842250674,
+            "title":"徳島",
+            "pinColor":"#ff0000",
+            "height":300,
+            "width":320,
+            "description": '上勝ゼロウエイストi<br><img src="img/kamikatu_zero.jpg" width="300">',
+            "show":false
+        };
+        options[2]={
+            "lat":33.73275447833989,
+            "lon":134.5347395808819,
+            "title":"徳島",
+            "pinColor":"#ff0000",
+            "height":300,
+            "width":320,
+            "description": '日和佐あわえ<br><img src="img/awae.jpg" width="300">',
+            "show":false
+        };
+
+        //----------------------------------------------------
+        //4. Switch infoboxs
+        //   infoboxLayers(options, true); //true=one, false=Multiple
+        //----------------------------------------------------
+        map.infoboxLayers(options,true);
+
+    }
+</script>
+</body>
+</html>
