@@ -6,22 +6,22 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <link rel="stylesheet" href="css/style.css">
 <link rel="icon" type="image/x-icon" href="img/favicon.ico">
-
-
 </head>
 <body>
 
-
-
 <h1>ここにいます</h1>
-
+<script>
+// 初期ユーザー名の確認
+let userName = prompt("あなたの名前を入力してください", "ゲスト");
+if (!userName) userName = "ゲスト"; // 入力がない場合のデフォルト値
+</script>
 <button id="send">位置情報を知らせる</button>
 <div id="output" style="overflow: auto;height: 100px;"></div>
 <!-- MAP[START] -->
 <div id="myMap" style='width:100%;height:70%;float:left;'></div>
 <!-- MAP[END] -->
 <footer id="footer">
-
+    <img src="img/logo.png" alt="potz" class="logo"> 
     <a href="infoboxs_showChange.html">徳島行ってみよう</a>
 </footer>
 <script src='https://www.bing.com/api/maps/mapcontrol?callback=GetMap&key=AnyNxLkldi8EXahD24Eocb7qnVk8EmqW8QMLpYojrc39cX2yZdPH_RONx2gsfF2c' async defer></script>
@@ -57,10 +57,9 @@ function GetMap(){
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getDatabase, ref, push, set, update, remove, onChildAdded, onChildChanged, onChildRemoved } 
+import { getDatabase, ref, push, set, remove, onChildAdded } 
 from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
 import firebaseConfig from "./js/firebase.js";
-console.log(firebaseConfig);
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const dbRef = ref(db,"map");
@@ -72,25 +71,24 @@ function formatTimestamp(date) {
     const hour = ('0' + date.getHours()).slice(-2);
     const min = ('0' + date.getMinutes()).slice(-2);
     return `${y}/${m}/${d} ${hour}:${min}`;
-  }
+}
 
-  $(document).ready(function() {
-    $("#send").on("click", async function() { // async を追加
-        map.geolocation(async function(data) { // async を追加
+$(document).ready(function() {
+    $("#send").on("click", async function() {
+        map.geolocation(async function(data) {
             const lat = data.coords.latitude;
             const lon = data.coords.longitude;
             const now = new Date();
             
             let msg = {
+                uname: userName,  
                 lat: lat,
                 lon: lon,
                 timestamp: formatTimestamp(now)
             };
-            console.log (lat,lon);
             const newPostRef = push(ref(db, "map"));
             await set(newPostRef, msg);
-            // ここでメール送信の処理をトリガーする（
-            alert(lat+`メールにて位置情報を送信！`); // このページのURLリンクの予定
+            alert(`${lat} 位置情報を送信しました！`);
         }, function(error) {
             console.error("Geolocation error: ", error);
         }, {
@@ -99,52 +97,40 @@ function formatTimestamp(date) {
             timeout: 10000
         });
     });
-  
+
+    loadMessages();
+
+    $(document).on("click", ".show-btn", function() {
+        const lat = $(this).data("lat");
+        const lon = $(this).data("lon");
+        map.startMap(lat, lon, "load", 15);
+        map.pin(lat, lon, "#ff0000");
+    });
+
+    $(document).on("click", ".delete-btn", function() {
+        const postId = $(this).attr("data-id");
+        alert("位置情報を削除しました。");
+        remove(ref(db, `map/${postId}`));
+        $("#output").empty();
+     
+    });
 });
 
-
 function loadMessages() {
-    // 存在するメッセージを一度クリア
     $("#output").empty();
-    onChildAdded(dbRef, function(data) {
-        const msg = data.val();
+    onChildAdded(dbRef, function(snapshot) {
+        const msg = snapshot.val();
 
-        let h = `<div id="map-${data.key}">`;
-        h += `<p class="map-lat">Lat: ${msg.lat}, Lon: ${msg.lon}</p>`; 
+        let h = `<div id="map-${snapshot.key}">`;
+        h += `<span>${msg.uname}<br></span>`;
+        
         h += `<span>${msg.timestamp}</span>`;
-        // 「表示」ボタンに data-lat と data-lon 属性を追加
-        h += `<button class="show-btn" data-id="${data.key}" data-lat="${msg.lat}" data-lon="${msg.lon}">表示</button>`;
-        h += `<button class="delete-btn" data-id="${data.key}">削除</button>`;
+        h += `<button class="show-btn" data-id="${snapshot.key}" data-lat="${msg.lat}" data-lon="${msg.lon}">表示</button>`;
+        h += `<button class="delete-btn" data-id="${snapshot.key}">削除</button>`;
         h += '</div>';
         $("#output").prepend(h);
     });
 }
-
-$(document).ready(function() {
-    loadMessages(); // メッセージをロードする関数を呼び出す
-
-    // '表示'ボタンに対するイベントリスナー
-    $(document).on("click", ".show-btn", function() {
-        const lat = $(this).data("lat");
-        const lon = $(this).data("lon");
-        //Map
-        map.startMap(lat, lon, "load", 15);
-        //pin
-        map.pin(lat,lon,"#ff0000");
-    });
-
-    // 削除ボタンに対するイベントリスナー（以前の説明を参照）
-});
-
-// 削除機能の実装
-$(document).on("click", ".delete-btn", function() {
-    const postId = $(this).attr("data-id");
-    alert("位置情報を削除しました。");
-    remove(ref(db, `map/${postId}`));
-    $("#output").empty();
-});
-
-
 </script>
 </body>
 </html>
